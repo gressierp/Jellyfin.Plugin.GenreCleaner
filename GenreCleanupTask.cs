@@ -90,10 +90,9 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
-            // Correction CS0117 : Nouvelle façon de définir un déclencheur quotidien
             return new[] { 
                 new TaskTriggerInfo { 
-                    Type = "DailyTrigger", 
+                    Type = TaskTriggerInfoType.Daily, // Correction finale ici
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
