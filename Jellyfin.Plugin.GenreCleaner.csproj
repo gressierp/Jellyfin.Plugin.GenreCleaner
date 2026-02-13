@@ -4,8 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jellyfin.Plugin.GenreCleaner</AssemblyName>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <RootNamespace>Jellyfin.Plugin.GenreCleaner</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
