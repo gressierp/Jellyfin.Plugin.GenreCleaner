@@ -2,6 +2,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Controller.Entities.Movies; // Ajouté par sécurité
 using System;
 using System.Collections.Generic;
 using System.Linq;
