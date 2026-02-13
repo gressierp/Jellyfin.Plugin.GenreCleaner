@@ -5,7 +5,6 @@ namespace Jellyfin.Plugin.GenreCleaner
 {
     public class PluginConfiguration : BasePluginConfiguration
     {
-        // On stocke le mapping sous forme de liste de paires Clé/Valeur
         public List<GenreMapping> Mappings { get; set; }
 
         public PluginConfiguration()
