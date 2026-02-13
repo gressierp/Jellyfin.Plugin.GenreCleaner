@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jellyfin.Plugin.GenreCleaner</AssemblyName>
-    <PackageId>Jellyfin.Plugin.GenreCleaner</PackageId>
+    <RootNamespace>Jellyfin.Plugin.GenreCleaner</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
