@@ -2,6 +2,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
+using Jellyfin.Data.Enums; // Requis pour BaseItemKind
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,10 +30,9 @@ namespace Jellyfin.Plugin.GenreCleaner
             var config = Plugin.Instance?.Configuration;
             if (config == null || config.Mappings == null || config.Mappings.Count == 0) return;
 
-            // On récupère les items de type Movie
             var movies = _libraryManager.GetItemList(new InternalItemsQuery
             {
-                IncludeItemTypes = new[] { "Movie" },
+                IncludeItemTypes = new[] { BaseItemKind.Movie }, // Correction CS0029
                 Recursive = true,
                 IsVirtualItem = false
             }).ToList();
@@ -61,7 +61,8 @@ namespace Jellyfin.Plugin.GenreCleaner
                         movie.LockedFields = lockedFields.ToArray();
                     }
                     
-                    await _libraryManager.UpdateItemAsync(movie, ItemUpdateType.MetadataEdit, cancellationToken);
+                    // Correction CS7036 : Ajout des paramètres manquants
+                    await _libraryManager.UpdateItemAsync(movie, movie, ItemUpdateType.MetadataEdit, cancellationToken);
                 }
                 progress.Report((double)i / movies.Count * 100);
             }
