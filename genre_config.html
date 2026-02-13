@@ -1,0 +1,86 @@
+<div id="GenreCleanerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-table">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="GenreCleanerConfigForm">
+                <div class="sectionTitleContainer flex align-items-center">
+                    <h2 class="sectionTitle">Mapping des Genres</h2>
+                    <button id="btnAddMapping" is="emby-button" type="button" class="raised button-submit margin-left">
+                        <span>Ajouter une règle</span>
+                    </button>
+                </div>
+
+                <div class="paperList">
+                    <table class="table" id="tableMappings" style="width: 100%;">
+                        <thead>
+                            <tr class="tableHeaderCell">
+                                <th style="width: 40%;">Genre Source (Ancien)</th>
+                                <th style="width: 40%;">Genre Destination (Nouveau)</th>
+                                <th style="width: 20%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listMappings">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="padding-top">
+                    <button is="emby-button" type="submit" class="raised button-submit block">
+                        <span>Enregistrer la configuration</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var GenreCleanerConfig = {
+            pluginId: "METTRE_ICI_TON_GUID_PLUGIN"
+        };
+
+        function loadConfig(page) {
+            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
+                var html = '';
+                config.Mappings.forEach(function (mapping, index) {
+                    html += '<tr>';
+                    html += '<td><input is="emby-input" type="text" value="' + mapping.OldGenre + '" class="oldGenre" /></td>';
+                    html += '<td><input is="emby-input" type="text" value="' + mapping.NewGenre + '" class="newGenre" /></td>';
+                    html += '<td><button type="button" is="emby-button" class="raised button-cancel" onclick="this.closest(\'tr\').remove();">Supprimer</button></td>';
+                    html += '</tr>';
+                });
+                page.querySelector('#listMappings').innerHTML = html;
+            });
+        }
+
+        document.querySelector('#GenreCleanerConfigPage').addEventListener('pageshow', function () {
+            loadConfig(this);
+        });
+
+        document.querySelector('#btnAddMapping').addEventListener('click', function () {
+            var html = '<tr>';
+            html += '<td><input is="emby-input" type="text" class="oldGenre" /></td>';
+            html += '<td><input is="emby-input" type="text" class="newGenre" /></td>';
+            html += '<td><button type="button" is="emby-button" class="raised button-cancel" onclick="this.closest(\'tr\').remove();">Supprimer</button></td>';
+            html += '</tr>';
+            document.querySelector('#listMappings').insertAdjacentHTML('beforeend', html);
+        });
+
+        document.querySelector('#GenreCleanerConfigForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var page = this.closest('[data-role="page"]');
+            
+            var mappings = [];
+            var rows = page.querySelectorAll('#listMappings tr');
+            rows.forEach(function (row) {
+                mappings.push({
+                    OldGenre: row.querySelector('.oldGenre').value,
+                    NewGenre: row.querySelector('.newGenre').value
+                });
+            });
+
+            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
+                config.Mappings = mappings;
+                ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+            });
+        });
+    </script>
+</div>
