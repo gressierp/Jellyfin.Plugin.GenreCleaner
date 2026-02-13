@@ -34,13 +34,16 @@
 
     <script type="text/javascript">
         var GenreCleanerConfig = {
-            pluginId: "METTRE_ICI_TON_GUID_PLUGIN"
+            pluginId: "7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"
         };
 
         function loadConfig(page) {
             ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
                 var html = '';
-                config.Mappings.forEach(function (mapping, index) {
+                // Sécurité si config.Mappings n'existe pas encore
+                var currentMappings = config.Mappings || [];
+                
+                currentMappings.forEach(function (mapping, index) {
                     html += '<tr>';
                     html += '<td><input is="emby-input" type="text" value="' + mapping.OldGenre + '" class="oldGenre" /></td>';
                     html += '<td><input is="emby-input" type="text" value="' + mapping.NewGenre + '" class="newGenre" /></td>';
@@ -71,15 +74,21 @@
             var mappings = [];
             var rows = page.querySelectorAll('#listMappings tr');
             rows.forEach(function (row) {
-                mappings.push({
-                    OldGenre: row.querySelector('.oldGenre').value,
-                    NewGenre: row.querySelector('.newGenre').value
-                });
+                var oldVal = row.querySelector('.oldGenre').value;
+                var newVal = row.querySelector('.newGenre').value;
+                if (oldVal && newVal) {
+                    mappings.push({
+                        OldGenre: oldVal,
+                        NewGenre: newVal
+                    });
+                }
             });
 
             ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
                 config.Mappings = mappings;
-                ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                });
             });
         });
     </script>
