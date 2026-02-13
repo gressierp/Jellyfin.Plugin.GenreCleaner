@@ -92,7 +92,8 @@ namespace Jellyfin.Plugin.GenreCleaner
         {
             return new[] { 
                 new TaskTriggerInfo { 
-                    Type = TaskTriggerInfoType.Daily, // Correction finale ici
+                    // On utilise le transtypage pour contourner les changements de noms
+                    Type = (TaskTriggerInfoType)0, // 0 correspond à 'Daily' dans Jellyfin
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
