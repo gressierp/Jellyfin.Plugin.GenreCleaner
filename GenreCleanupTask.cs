@@ -2,7 +2,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Controller.Entities.Movies; // Ajouté par sécurité
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,23 +29,31 @@ namespace Jellyfin.Plugin.GenreCleaner
             var config = Plugin.Instance?.Configuration;
             if (config == null || config.Mappings == null || config.Mappings.Count == 0) return;
 
+            // On récupère les items de type Movie
             var movies = _libraryManager.GetItemList(new InternalItemsQuery
             {
                 IncludeItemTypes = new[] { "Movie" },
-                Recursive = true
-            });
+                Recursive = true,
+                IsVirtualItem = false
+            }).ToList();
 
             for (int i = 0; i < movies.Count; i++)
             {
                 var movie = movies[i];
                 var originalGenres = movie.Genres;
-                var newGenres = originalGenres.Select(g => 
-                    config.Mappings.FirstOrDefault(m => m.OldGenre.Equals(g, StringComparison.OrdinalIgnoreCase))?.NewGenre ?? g
-                ).Distinct().ToArray();
-
-                if (!originalGenres.SequenceEqual(newGenres))
+                
+                var newGenresList = new List<string>();
+                foreach (var g in originalGenres)
                 {
-                    movie.Genres = newGenres;
+                    var mapping = config.Mappings.FirstOrDefault(m => m.OldGenre.Equals(g, StringComparison.OrdinalIgnoreCase));
+                    newGenresList.Add(mapping != null ? mapping.NewGenre : g);
+                }
+                
+                var finalGenres = newGenresList.Distinct().ToArray();
+
+                if (!originalGenres.SequenceEqual(finalGenres))
+                {
+                    movie.Genres = finalGenres;
                     var lockedFields = movie.LockedFields.ToList();
                     if (!lockedFields.Contains(MetadataField.Genres))
                     {
