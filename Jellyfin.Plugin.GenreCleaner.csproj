@@ -4,13 +4,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jellyfin.Plugin.GenreCleaner</AssemblyName>
-    <RootNamespace>Jellyfin.Plugin.GenreCleaner</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Model" Version="10.9.*" />
-    <PackageReference Include="Jellyfin.Library" Version="10.9.*" />
-    <PackageReference Include="Jellyfin.Controller" Version="10.9.*" />
+    <PackageReference Include="Jellyfin.Model" Version="10.9.11" />
+    <PackageReference Include="Jellyfin.Library" Version="10.9.11" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.9.11" />
   </ItemGroup>
 
   <ItemGroup>
