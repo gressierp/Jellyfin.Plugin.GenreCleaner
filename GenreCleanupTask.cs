@@ -2,7 +2,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
-using Jellyfin.Data.Enums; // Requis pour BaseItemKind
+using Jellyfin.Data.Enums;
+using Microsoft.Extensions.Logging; // Requis pour le logging
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,28 +15,38 @@ namespace Jellyfin.Plugin.GenreCleaner
     public class GenreCleanupTask : IScheduledTask
     {
         private readonly ILibraryManager _libraryManager;
+        private readonly ILogger<GenreCleanupTask> _logger; // Déclaration du logger
 
-        public GenreCleanupTask(ILibraryManager libraryManager)
+        public GenreCleanupTask(ILibraryManager libraryManager, ILogger<GenreCleanupTask> logger)
         {
             _libraryManager = libraryManager;
+            _logger = logger;
         }
 
         public string Name => "Nettoyer les genres de films";
         public string Key => "GenreCleanupTask";
-        public string Description => "Applique le mapping des genres défini dans la configuration.";
+        public string Description => "Applique le mapping des genres et log les modifications.";
         public string Category => "Library";
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            if (config == null || config.Mappings == null || config.Mappings.Count == 0) return;
+            if (config == null || config.Mappings == null || config.Mappings.Count == 0)
+            {
+                _logger.LogWarning("GenreCleaner: Aucune règle de mapping trouvée dans la configuration.");
+                return;
+            }
+
+            _logger.LogInformation("GenreCleaner: Démarrage du nettoyage des genres...");
 
             var movies = _libraryManager.GetItemList(new InternalItemsQuery
             {
-                IncludeItemTypes = new[] { BaseItemKind.Movie }, // Correction CS0029
+                IncludeItemTypes = new[] { BaseItemKind.Movie },
                 Recursive = true,
                 IsVirtualItem = false
             }).ToList();
+
+            int modifiedCount = 0;
 
             for (int i = 0; i < movies.Count; i++)
             {
@@ -53,6 +64,9 @@ namespace Jellyfin.Plugin.GenreCleaner
 
                 if (!originalGenres.SequenceEqual(finalGenres))
                 {
+                    _logger.LogInformation("GenreCleaner: Modification de '{0}' | Anciens: [{1}] -> Nouveaux: [{2}]", 
+                        movie.Name, string.Join(", ", originalGenres), string.Join(", ", finalGenres));
+
                     movie.Genres = finalGenres;
                     var lockedFields = movie.LockedFields.ToList();
                     if (!lockedFields.Contains(MetadataField.Genres))
@@ -61,11 +75,13 @@ namespace Jellyfin.Plugin.GenreCleaner
                         movie.LockedFields = lockedFields.ToArray();
                     }
                     
-                    // Correction CS7036 : Ajout des paramètres manquants
                     await _libraryManager.UpdateItemAsync(movie, movie, ItemUpdateType.MetadataEdit, cancellationToken);
+                    modifiedCount++;
                 }
                 progress.Report((double)i / movies.Count * 100);
             }
+
+            _logger.LogInformation("GenreCleaner: Nettoyage terminé. {0} films ont été mis à jour.", modifiedCount);
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
