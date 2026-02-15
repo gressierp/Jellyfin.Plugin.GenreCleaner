@@ -24,7 +24,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         public Stream GetThumbImage()
         {
             var type = GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".GenreCleaner.png");
+            return type.Assembly.GetManifestResourceStream( "Jellyfin.Plugin.GenreCleaner.GenreCleaner.png");
         }
 
         public string ThumbImageFormat => "png";
