@@ -1,4 +1,4 @@
-using System;
+Cleanerusing System;
 using System.Collections.Generic;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         public Stream GetImageResource()
         {
             var type = GetType();
-            return type.Assembly.GetManifestResourceStream("Jellyfin.Plugin.GenreCleaner.icon.png");
+            return type.Assembly.GetManifestResourceStream("Jellyfin.Plugin.GenreCleaner.GenreCleaner.png");
         }
 
         public string ThumbImageFormat => "png";
