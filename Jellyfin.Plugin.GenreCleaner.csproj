@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework> <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net9.0</TargetFramework> <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jellyfin.Plugin.GenreCleaner</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.GenreCleaner</RootNamespace>
@@ -14,7 +14,8 @@
   <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="10.11.5" />
     <PackageReference Include="Jellyfin.Model" Version="10.11.5" />
-  </ItemGroup>
+    <PackageReference Include="Jellyfin.Common" Version="10.11.5" />
+</ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="GenreCleaner.png" />
