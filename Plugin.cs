@@ -5,6 +5,7 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Jellyfin.Plugin.GenreCleaner;
+using MediaBrowser.Model.Drawing;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
@@ -21,10 +22,10 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public static Plugin? Instance { get; private set; }
 
-        public Stream GetThumbImage()
+        public Stream GetImageResource()
         {
             var type = GetType();
-            return type.Assembly.GetManifestResourceStream( "Jellyfin.Plugin.GenreCleaner.GenreCleaner.png");
+            return type.Assembly.GetManifestResourceStream("Jellyfin.Plugin.GenreCleaner.icon.png");
         }
 
         public string ThumbImageFormat => "png";
