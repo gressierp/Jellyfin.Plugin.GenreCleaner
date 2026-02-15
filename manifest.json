@@ -1,0 +1,19 @@
+[
+  {
+    "guid": "67e0e5c9-2782-4113-9038-0904d6074121",
+    "name": "Genre Cleaner",
+    "description": "Nettoyeur de genres automatisé pour Jellyfin.",
+    "overview": "Mappe les genres de votre médiathèque selon des règles personnalisées.",
+    "owner": "P.Gressier",
+    "category": "Metadata",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Première version stable pour Jellyfin 10.11.5",
+        "targetAbi": "10.11.5.0",
+        "sourceUrl": "https://github.com/gressierp/Jellyfin.Plugin.GenreCleaner/releases/download/v1.0.0.0/Jellyfin.Plugin.GenreCleaner.dll",
+        "checksum": "OPTIONNEL"
+      }
+    ]
+  }
+]
