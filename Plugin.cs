@@ -8,7 +8,7 @@ using Jellyfin.Plugin.GenreCleaner;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
         public override string Name => "Genre Cleaner";
         public override Guid Id => Guid.Parse("7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"); // Ton GUID unique
@@ -20,6 +20,14 @@ namespace Jellyfin.Plugin.GenreCleaner
         }
 
         public static Plugin? Instance { get; private set; }
+
+        public Stream GetThumbImage()
+        {
+            var type = GetType();
+            return type.Assembly.GetManifestResourceStream(type.Namespace + ".GenreCleaner.png");
+        }
+
+        public string ThumbImageFormat => "png";
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
