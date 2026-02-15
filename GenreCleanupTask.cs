@@ -26,7 +26,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         public string Name => "Nettoyer les genres de films";
         public string Key => "GenreCleanupTask";
         public string Description => "Applique le mapping des genres (Spécifique 10.11.5).";
-        public string Category => "Library";
+        public string Category => MediaBrowser.Model.Tasks.TaskCategory.Library;
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
