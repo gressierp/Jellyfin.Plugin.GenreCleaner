@@ -8,7 +8,7 @@ using Jellyfin.Plugin.GenreCleaner;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasPluginImage
     {
         public override string Name => "Genre Cleaner";
         public override Guid Id => Guid.Parse("7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"); // Ton GUID unique
