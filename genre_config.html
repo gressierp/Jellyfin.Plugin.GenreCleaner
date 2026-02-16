@@ -1,95 +1,77 @@
-<div id="GenreCleanerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-table">
-    <div data-role="content">
-        <div class="content-primary">
-            <form id="GenreCleanerConfigForm">
-                <div class="sectionTitleContainer flex align-items-center">
-                    <h2 class="sectionTitle">Mapping des Genres</h2>
-                    <button id="btnAddMapping" is="emby-button" type="button" class="raised button-submit margin-left">
-                        <span>Ajouter une règle</span>
-                    </button>
-                </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Genre Cleaner</title>
+</head>
+<body>
+    <div id="GenreCleanerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="genreCleanerForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">Configuration de Genre Cleaner</h2>
+                    </div>
 
-                <div class="paperList">
-                    <table class="table" id="tableMappings" style="width: 100%;">
-                        <thead>
-                            <tr class="tableHeaderCell">
-                                <th style="width: 40%;">Genre Source (Ancien)</th>
-                                <th style="width: 40%;">Genre Destination (Nouveau)</th>
-                                <th style="width: 20%;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listMappings">
-                            </tbody>
-                    </table>
-                </div>
+                    <div class="verticalSection">
+                        <p>Configurez la manière dont les genres de votre bibliothèque doivent être renommés ou fusionnés.</p>
+                        
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="GenreMappings">Règles de remplacement</label>
+                            <textarea is="emby-textarea" id="GenreMappings" name="GenreMappings" class="emby-textarea" rows="10" placeholder="Ancien Genre=Nouveau Genre"></textarea>
+                            <div class="fieldDescription">Entrez une règle par ligne sous la forme <b>Ancien=Nouveau</b>. <br/>Exemple : <i>Science-Fiction=SF</i> ou <i>Action/Aventure=Action</i>.</div>
+                        </div>
 
-                <div class="padding-top">
-                    <button is="emby-button" type="submit" class="raised button-submit block">
-                        <span>Enregistrer la configuration</span>
-                    </button>
-                </div>
-            </form>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input type="checkbox" is="emby-checkbox" id="EnableAutoClean" />
+                                <span>Activer le nettoyage automatique</span>
+                            </label>
+                            <div class="fieldDescription">Si activé, les genres seront nettoyés automatiquement lors de l'ajout de nouveaux médias à la bibliothèque.</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <button is="emby-button" type="submit" class="raised button-accent block">
+                            <span>Sauvegarder</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <script type="text/javascript">
-        var GenreCleanerConfig = {
-            pluginId: "7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"
-        };
+        <script type="text/javascript">
+            var GenreCleanerConfig = {
+                pluginId: "7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"
+            };
 
-        function loadConfig(page) {
-            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
-                var html = '';
-                // Sécurité si config.Mappings n'existe pas encore
-                var currentMappings = config.Mappings || [];
-                
-                currentMappings.forEach(function (mapping, index) {
-                    html += '<tr>';
-                    html += '<td><input is="emby-input" type="text" value="' + mapping.OldGenre + '" class="oldGenre" /></td>';
-                    html += '<td><input is="emby-input" type="text" value="' + mapping.NewGenre + '" class="newGenre" /></td>';
-                    html += '<td><button type="button" is="emby-button" class="raised button-cancel" onclick="this.closest(\'tr\').remove();">Supprimer</button></td>';
-                    html += '</tr>';
+            document.querySelector('#GenreCleanerConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                var page = this;
+
+                ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
+                    page.querySelector('#GenreMappings').value = config.GenreMappings || '';
+                    page.querySelector('#EnableAutoClean').checked = config.EnableAutoClean;
+                    Dashboard.hideLoadingMsg();
                 });
-                page.querySelector('#listMappings').innerHTML = html;
-            });
-        }
-
-        document.querySelector('#GenreCleanerConfigPage').addEventListener('pageshow', function () {
-            loadConfig(this);
-        });
-
-        document.querySelector('#btnAddMapping').addEventListener('click', function () {
-            var html = '<tr>';
-            html += '<td><input is="emby-input" type="text" class="oldGenre" /></td>';
-            html += '<td><input is="emby-input" type="text" class="newGenre" /></td>';
-            html += '<td><button type="button" is="emby-button" class="raised button-cancel" onclick="this.closest(\'tr\').remove();">Supprimer</button></td>';
-            html += '</tr>';
-            document.querySelector('#listMappings').insertAdjacentHTML('beforeend', html);
-        });
-
-        document.querySelector('#GenreCleanerConfigForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            var page = this.closest('[data-role="page"]');
-            
-            var mappings = [];
-            var rows = page.querySelectorAll('#listMappings tr');
-            rows.forEach(function (row) {
-                var oldVal = row.querySelector('.oldGenre').value;
-                var newVal = row.querySelector('.newGenre').value;
-                if (oldVal && newVal) {
-                    mappings.push({
-                        OldGenre: oldVal,
-                        NewGenre: newVal
-                    });
-                }
             });
 
-            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
-                config.Mappings = mappings;
+            document.querySelector('#genreCleanerForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var page = document.querySelector('#GenreCleanerConfigPage');
+
+                var config = {
+                    GenreMappings: page.querySelector('#GenreMappings').value,
+                    EnableAutoClean: page.querySelector('#EnableAutoClean').checked
+                };
+
                 ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(function (result) {
                     Dashboard.processPluginConfigurationUpdateResult(result);
                 });
+
+                return false;
             });
-        });
-    </script>
-</div>
+        </script>
+    </div>
+</body>
+</html>
