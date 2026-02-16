@@ -1,7 +1,8 @@
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Controller.Entities; // Nécessaire pour InternalItemsQuery en 10.11.5
+using MediaBrowser.Controller.Entities;
+using Jellyfin.Data.Enums; // INDISPENSABLE pour BaseItemKind en 10.11.5
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -25,10 +26,10 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            // Correction 10.11.5 : Vérifier que le namespace Entities est bien inclus
+            // Correction 10.11.5 : Utilisation du type énuméré strict BaseItemKind
             var query = new InternalItemsQuery 
             { 
-                IncludeItemTypes = new[] { "Movie", "Series" }, 
+                IncludeItemTypes = new[] { BaseItemKind.Movie, BaseItemKind.Series }, 
                 Recursive = true,
                 IsVirtualItem = false
             };
@@ -37,7 +38,8 @@ namespace Jellyfin.Plugin.GenreCleaner
 
             for (int i = 0; i < items.Count; i++)
             {
-                // On appelle le moteur centralisé dans Plugin.cs (version 10.11.5)
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (Plugin.Instance != null && Plugin.Instance.CleanGenres(items[i]))
                 {
                     await _libraryManager.UpdateItemAsync(items[i], items[i], ItemUpdateType.MetadataEdit, cancellationToken);
@@ -56,7 +58,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             { 
                 new TaskTriggerInfo 
                 { 
-                    Type = (TaskTriggerInfoType)0, // Stable pour 10.11.x
+                    Type = TaskTriggerInfo.TriggerDaily, // Utilisation de la constante statique pour 10.11.x
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
