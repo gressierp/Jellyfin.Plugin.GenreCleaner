@@ -1,16 +1,17 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Plugins; // C'est celui-ci qui manquait pour IServerEntryPoint
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Entities.Movies;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
+using MediaBrowser.Controller.Entities.TV;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
-    public class GenreCleanerEntryPoint : IServerEntryPoint
+    // On utilise le chemin COMPLET vers l'interface pour forcer le compilateur
+    public class GenreCleanerEntryPoint : MediaBrowser.Controller.Plugins.IServerEntryPoint
     {
         private readonly ILibraryManager _libraryManager;
         private readonly ILogger<GenreCleanerEntryPoint> _logger;
@@ -23,22 +24,26 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public Task RunAsync()
         {
+            // On s'abonne à l'événement d'ajout
             _libraryManager.ItemAdded += OnItemAdded;
             return Task.CompletedTask;
         }
 
         private async void OnItemAdded(object? sender, ItemChangeEventArgs e)
         {
-            // Vérification de la config
-            if (Plugin.Instance?.Configuration.EnableAutoClean != true) return;
+            // Vérification de sécurité sur l'instance et la config
+            if (Plugin.Instance == null || Plugin.Instance.Configuration.EnableAutoClean != true) 
+                return;
 
-            // On traite les Films et les Séries (Series est dans MediaBrowser.Controller.Entities.TV)
-            if (e.Item is Movie || e.Item is MediaBrowser.Controller.Entities.TV.Series)
+            // Filtrage : Films ou Séries
+            if (e.Item is Movie || e.Item is Series)
             {
+                // On appelle le moteur centralisé dans Plugin.cs
                 if (Plugin.Instance.CleanGenres(e.Item))
                 {
-                    _logger.LogInformation("GenreCleaner (Auto): Genres mis à jour pour {0}", e.Item.Name);
-                    // Sauvegarde des métadonnées modifiées
+                    _logger.LogInformation("GenreCleaner (Auto): Modification des genres détectée pour {0}", e.Item.Name);
+                    
+                    // On enregistre les changements dans la base Jellyfin
                     await _libraryManager.UpdateItemAsync(e.Item, e.Item, ItemUpdateType.MetadataEdit, default);
                 }
             }
@@ -46,7 +51,11 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public void Dispose()
         {
-            _libraryManager.ItemAdded -= OnItemAdded;
+            // Libération de l'événement pour éviter les fuites mémoire
+            if (_libraryManager != null)
+            {
+                _libraryManager.ItemAdded -= OnItemAdded;
+            }
         }
     }
 }
