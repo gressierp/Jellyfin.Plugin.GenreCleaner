@@ -16,8 +16,8 @@
                         <p>Configurez la manière dont les genres de votre bibliothèque doivent être renommés ou fusionnés.</p>
                         
                         <div class="inputContainer">
-                            <label class="inputLabel" for="GenreMappings">Règles de remplacement</label>
-                            <textarea is="emby-textarea" id="GenreMappings" name="GenreMappings" class="emby-textarea" rows="10" placeholder="Ancien Genre=Nouveau Genre"></textarea>
+                            <label class="inputLabel" for="Mappings">Règles de remplacement</label>
+                            <textarea is="emby-textarea" id="Mappings" name="Mappings" class="emby-textarea" rows="10" placeholder="Ancien Genre=Nouveau Genre"></textarea>
                             <div class="fieldDescription">Entrez une règle par ligne sous la forme <b>Ancien=Nouveau</b>. <br/>Exemple : <i>Science-Fiction=SF</i> ou <i>Action/Aventure=Action</i>.</div>
                         </div>
 
@@ -49,7 +49,7 @@
                 var page = this;
 
                 ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
-                    page.querySelector('#GenreMappings').value = config.GenreMappings || '';
+                    page.querySelector('#Mappings').value = config.Mappings || '';
                     page.querySelector('#EnableAutoClean').checked = config.EnableAutoClean;
                     Dashboard.hideLoadingMsg();
                 });
@@ -61,7 +61,7 @@
                 var page = document.querySelector('#GenreCleanerConfigPage');
 
                 var config = {
-                    GenreMappings: page.querySelector('#GenreMappings').value,
+                    Mappings: page.querySelector('#Mappings').value,
                     EnableAutoClean: page.querySelector('#EnableAutoClean').checked
                 };
 
