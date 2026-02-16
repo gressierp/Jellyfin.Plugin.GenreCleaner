@@ -115,7 +115,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         {
             return new[] { 
                 new TaskTriggerInfo { 
-                    Type = TaskTriggerInfoType.Daily, 
+                    Type = (TaskTriggerInfoType)0,
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
