@@ -1,5 +1,7 @@
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Controller.Entities; // Nécessaire pour InternalItemsQuery en 10.11.5
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,7 +25,7 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            // On récupère les films et les séries
+            // Correction 10.11.5 : Vérifier que le namespace Entities est bien inclus
             var query = new InternalItemsQuery 
             { 
                 IncludeItemTypes = new[] { "Movie", "Series" }, 
@@ -35,7 +37,7 @@ namespace Jellyfin.Plugin.GenreCleaner
 
             for (int i = 0; i < items.Count; i++)
             {
-                // On appelle le moteur centralisé dans Plugin.cs
+                // On appelle le moteur centralisé dans Plugin.cs (version 10.11.5)
                 if (Plugin.Instance != null && Plugin.Instance.CleanGenres(items[i]))
                 {
                     await _libraryManager.UpdateItemAsync(items[i], items[i], ItemUpdateType.MetadataEdit, cancellationToken);
@@ -54,7 +56,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             { 
                 new TaskTriggerInfo 
                 { 
-                    Type = (TaskTriggerInfoType)0, 
+                    Type = (TaskTriggerInfoType)0, // Stable pour 10.11.x
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
