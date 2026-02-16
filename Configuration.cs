@@ -5,7 +5,7 @@ namespace Jellyfin.Plugin.GenreCleaner
     public class PluginConfiguration : BasePluginConfiguration
     {
         // Ces noms doivent correspondre EXACTEMENT à ceux utilisés dans le script JS du fichier HTML
-        public string GenreMappings { get; set; }
+        public string Mappings { get; set; }
         public bool EnableAutoClean { get; set; }
 
         public PluginConfiguration()
