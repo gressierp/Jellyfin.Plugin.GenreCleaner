@@ -1,21 +1,18 @@
 using MediaBrowser.Model.Plugins;
-using System.Collections.Generic;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public List<GenreMapping> Mappings { get; set; }
+        // Ces noms doivent correspondre EXACTEMENT à ceux utilisés dans le script JS du fichier HTML
+        public string GenreMappings { get; set; }
+        public bool EnableAutoClean { get; set; }
 
         public PluginConfiguration()
         {
-            Mappings = new List<GenreMapping>();
+            // Valeurs par défaut lors du premier lancement
+            GenreMappings = string.Empty;
+            EnableAutoClean = true;
         }
-    }
-
-    public class GenreMapping
-    {
-        public string OldGenre { get; set; } = string.Empty;
-        public string NewGenre { get; set; } = string.Empty;
     }
 }
