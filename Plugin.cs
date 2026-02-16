@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.IO; // Essentiel pour Stream
+using System.IO;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Model.Drawing; // Essentiel pour ImageFormat
+using MediaBrowser.Model.Drawing; // Requis pour ImageFormat
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    // On garde IHasPluginImage car maintenant le build passe
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasPluginImage
     {
         public override string Name => "Genre Cleaner";
         public override Guid Id => Guid.Parse("7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1");
@@ -22,16 +23,16 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public static Plugin? Instance { get; private set; }
 
-        // Interface IHasPluginImage
+        // CORRECTION ICI : Doit retourner un Stream
         public Stream GetImageResource()
         {
             var type = GetType();
-            // Vérifie bien que ton fichier s'appelle GenreCleaner.png dans ton projet
-            return type.Assembly.GetManifestResourceStream("Jellyfin.Plugin.GenreCleaner.GenreCleaner.png") 
-                   ?? throw new FileNotFoundException("L'image n'a pas été trouvée dans les ressources.");
+            var resourceName = "Jellyfin.Plugin.GenreCleaner.GenreCleaner.png";
+            return type.Assembly.GetManifestResourceStream(resourceName) 
+                   ?? throw new FileNotFoundException($"L'image {resourceName} est introuvable dans les ressources.");
         }
 
-        // Le format doit être l'énumération, pas un string
+        // CORRECTION ICI : Ne pas utiliser ThumbImageFormat (string) mais ImageFormat (enum)
         public ImageFormat ImageFormat => ImageFormat.Png;
 
         public IEnumerable<PluginPageInfo> GetPages()
