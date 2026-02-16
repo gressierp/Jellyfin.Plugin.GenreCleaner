@@ -1,14 +1,63 @@
-public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-{
-    var query = new InternalItemsQuery { IncludeItemTypes = new[] { BaseItemKind.Movie }, Recursive = true, IsVirtualItem = false };
-    var movies = _libraryManager.GetItemList(query);
+using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-    for (int i = 0; i < movies.Count; i++)
+namespace Jellyfin.Plugin.GenreCleaner
+{
+    public class GenreCleanupTask : IScheduledTask
     {
-        if (Plugin.Instance != null && Plugin.Instance.CleanGenres(movies[i]))
+        private readonly ILibraryManager _libraryManager;
+
+        public GenreCleanupTask(ILibraryManager libraryManager)
         {
-            await _libraryManager.UpdateItemAsync(movies[i], movies[i], ItemUpdateType.MetadataEdit, cancellationToken);
+            _libraryManager = libraryManager;
         }
-        progress.Report((double)i / movies.Count * 100);
+
+        public string Name => "Nettoyer les genres (Manuel)";
+        public string Key => "GenreCleanupTask";
+        public string Description => "Applique les règles de remplacement à toute la bibliothèque.";
+        public string Category => "Library";
+
+        public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
+        {
+            // On récupère les films et les séries
+            var query = new InternalItemsQuery 
+            { 
+                IncludeItemTypes = new[] { "Movie", "Series" }, 
+                Recursive = true,
+                IsVirtualItem = false
+            };
+            
+            var items = _libraryManager.GetItemList(query);
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                // On appelle le moteur centralisé dans Plugin.cs
+                if (Plugin.Instance != null && Plugin.Instance.CleanGenres(items[i]))
+                {
+                    await _libraryManager.UpdateItemAsync(items[i], items[i], ItemUpdateType.MetadataEdit, cancellationToken);
+                }
+                
+                if (items.Count > 0)
+                {
+                    progress.Report((double)i / items.Count * 100);
+                }
+            }
+        }
+
+        public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
+        {
+            return new[] 
+            { 
+                new TaskTriggerInfo 
+                { 
+                    Type = (TaskTriggerInfoType)0, 
+                    TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
+                } 
+            };
+        }
     }
 }
