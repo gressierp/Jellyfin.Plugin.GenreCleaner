@@ -6,10 +6,10 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Model.Drawing;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Drawing;
 
 namespace Jellyfin.Plugin.GenreCleaner
 {
@@ -18,73 +18,64 @@ namespace Jellyfin.Plugin.GenreCleaner
         public override string Name => "Genre Cleaner";
         public override Guid Id => Guid.Parse("7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1");
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+        private readonly ILibraryManager _libraryManager;
+
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILibraryManager libraryManager)
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
+            _libraryManager = libraryManager;
+
+            // On s'abonne à l'événement DIRECTEMENT ici dans le constructeur
+            _libraryManager.ItemAdded += OnItemAdded;
         }
 
         public static Plugin? Instance { get; private set; }
-
-        public Stream GetImageResource()
-        {
-            var type = GetType();
-            var resourceName = "Jellyfin.Plugin.GenreCleaner.GenreCleaner.png";
-            return type.Assembly.GetManifestResourceStream(resourceName) 
-                   ?? throw new FileNotFoundException($"L'image {resourceName} est introuvable.");
-        }
-
-        public ImageFormat ImageFormat => ImageFormat.Png;
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
             return new[] { new PluginPageInfo { Name = "GenreCleaner", EmbeddedResourcePath = GetType().Namespace + ".genre_config.html" } };
         }
 
-        // --- LE MOTEUR DE NETTOYAGE CENTRALISÉ ---
+        private void OnItemAdded(object? sender, ItemChangeEventArgs e)
+        {
+            if (Configuration.EnableAutoClean && (e.Item is MediaBrowser.Controller.Entities.Movies.Movie || e.Item is MediaBrowser.Controller.Entities.TV.Series))
+            {
+                if (CleanGenres(e.Item))
+                {
+                    _libraryManager.UpdateItemAsync(e.Item, e.Item, ItemUpdateType.MetadataEdit, default);
+                }
+            }
+        }
+
         public bool CleanGenres(BaseItem item)
         {
-            if (item.Genres == null || item.Genres.Length == 0) return false;
-            var config = Configuration;
-            if (string.IsNullOrWhiteSpace(config.Mappings)) return false;
+            if (item?.Genres == null || item.Genres.Length == 0) return false;
+            if (string.IsNullOrWhiteSpace(Configuration.Mappings)) return false;
 
-            // Préparation du dictionnaire
-            var mappingRules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var lines = config.Mappings.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+            var mappingRules = Configuration.Mappings.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Split('='))
+                .Where(p => p.Length == 2)
+                .ToDictionary(p => p[0].Trim(), p => p[1].Trim(), StringComparer.OrdinalIgnoreCase);
+
+            if (mappingRules.Count == 0) return false;
+
+            var newGenres = item.Genres.Select(g => mappingRules.TryGetValue(g, out var n) ? n : g).Distinct().ToArray();
+
+            if (!item.Genres.SequenceEqual(newGenres))
             {
-                var parts = line.Split('=');
-                if (parts.Length == 2) mappingRules[parts[0].Trim()] = parts[1].Trim();
+                item.Genres = newGenres;
+                var locked = item.LockedFields.ToList();
+                if (!locked.Contains(MetadataField.Genres)) { locked.Add(MetadataField.Genres); item.LockedFields = locked.ToArray(); }
+                return true;
             }
+            return false;
+        }
 
-            var newGenresList = new List<string>();
-            bool hasChanged = false;
-
-            foreach (var g in item.Genres)
-            {
-                if (mappingRules.TryGetValue(g, out var newGenre))
-                {
-                    newGenresList.Add(newGenre);
-                    hasChanged = true;
-                }
-                else
-                {
-                    newGenresList.Add(g);
-                }
-            }
-
-            if (hasChanged)
-            {
-                item.Genres = newGenresList.Distinct().ToArray();
-                var lockedFields = item.LockedFields.ToList();
-                if (!lockedFields.Contains(MetadataField.Genres))
-                {
-                    lockedFields.Add(MetadataField.Genres);
-                    item.LockedFields = lockedFields.ToArray();
-                }
-            }
-
-            return hasChanged;
+        public override void Dispose(bool disposing)
+        {
+            if (disposing) _libraryManager.ItemAdded -= OnItemAdded;
+            base.Dispose(disposing);
         }
     }
 }
