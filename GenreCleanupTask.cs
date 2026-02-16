@@ -2,7 +2,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Entities;
-using Jellyfin.Data.Enums; // INDISPENSABLE pour BaseItemKind en 10.11.5
+using Jellyfin.Data.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -26,7 +26,6 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            // Correction 10.11.5 : Utilisation du type énuméré strict BaseItemKind
             var query = new InternalItemsQuery 
             { 
                 IncludeItemTypes = new[] { BaseItemKind.Movie, BaseItemKind.Series }, 
@@ -58,7 +57,8 @@ namespace Jellyfin.Plugin.GenreCleaner
             { 
                 new TaskTriggerInfo 
                 { 
-                    Type = TaskTriggerInfo.TriggerDaily, // Utilisation de la constante statique pour 10.11.x
+                    // Utilisation directe de l'énumération TaskTriggerInfoType pour Jellyfin 10.11.5
+                    Type = TaskTriggerInfoType.DailyTrigger, 
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
