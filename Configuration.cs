@@ -11,7 +11,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         public PluginConfiguration()
         {
             // Valeurs par défaut lors du premier lancement
-            GenreMappings = string.Empty;
+            Mappings = string.Empty;
             EnableAutoClean = true;
         }
     }
