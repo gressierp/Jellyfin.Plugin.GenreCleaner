@@ -26,7 +26,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             Instance = this;
             _libraryManager = libraryManager;
 
-            // On s'abonne à l'événement DIRECTEMENT ici dans le constructeur
+            // Abonnement aux nouveaux médias
             _libraryManager.ItemAdded += OnItemAdded;
         }
 
@@ -34,7 +34,14 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            return new[] { new PluginPageInfo { Name = "GenreCleaner", EmbeddedResourcePath = GetType().Namespace + ".genre_config.html" } };
+            return new[] 
+            { 
+                new PluginPageInfo 
+                { 
+                    Name = "GenreCleaner", 
+                    EmbeddedResourcePath = GetType().Namespace + ".genre_config.html" 
+                } 
+            };
         }
 
         private void OnItemAdded(object? sender, ItemChangeEventArgs e)
@@ -66,16 +73,24 @@ namespace Jellyfin.Plugin.GenreCleaner
             {
                 item.Genres = newGenres;
                 var locked = item.LockedFields.ToList();
-                if (!locked.Contains(MetadataField.Genres)) { locked.Add(MetadataField.Genres); item.LockedFields = locked.ToArray(); }
+                if (!locked.Contains(MetadataField.Genres)) 
+                { 
+                    locked.Add(MetadataField.Genres); 
+                    item.LockedFields = locked.ToArray(); 
+                }
                 return true;
             }
             return false;
         }
 
-        public override void Dispose(bool disposing)
+        // Correction de l'erreur CS0115 : On utilise la méthode de l'interface IDisposable
+        // sans le mot-clé override si la classe de base ne le définit pas.
+        public void Dispose()
         {
-            if (disposing) _libraryManager.ItemAdded -= OnItemAdded;
-            base.Dispose(disposing);
+            if (_libraryManager != null)
+            {
+                _libraryManager.ItemAdded -= OnItemAdded;
+            }
         }
     }
 }
