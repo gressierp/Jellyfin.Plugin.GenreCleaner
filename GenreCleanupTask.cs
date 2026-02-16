@@ -25,21 +25,35 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         public string Name => "Nettoyer les genres de films";
         public string Key => "GenreCleanupTask";
-        public string Description => "Applique le mapping des genres (Spécifique 10.11.5).";
+        public string Description => "Applique le mapping des genres défini dans la configuration.";
         public string Category => "Library";
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            if (config == null || config.Mappings == null || config.Mappings.Count == 0)
+            
+            // Correction Erreur ligne 34 : On vérifie si la chaîne est vide
+            if (config == null || string.IsNullOrWhiteSpace(config.Mappings))
             {
-                _logger.LogWarning("GenreCleaner: Aucune règle de mapping trouvée.");
+                _logger.LogWarning("GenreCleaner: Aucune règle de mapping trouvée dans la configuration.");
                 return;
             }
 
-            _logger.LogInformation("GenreCleaner: Démarrage du scan...");
+            // Transformation du texte "Ancien=Nouveau" en Dictionnaire
+            var mappingRules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var lines = config.Mappings.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var line in lines)
+            {
+                var parts = line.Split('=');
+                if (parts.Length == 2)
+                {
+                    mappingRules[parts[0].Trim()] = parts[1].Trim();
+                }
+            }
 
-            // En 10.11.5, on utilise GetItemList avec le bon type de retour
+            if (mappingRules.Count == 0) return;
+
             var query = new InternalItemsQuery
             {
                 IncludeItemTypes = new[] { BaseItemKind.Movie },
@@ -58,16 +72,25 @@ namespace Jellyfin.Plugin.GenreCleaner
                 if (originalGenres == null || originalGenres.Length == 0) continue;
 
                 var newGenresList = new List<string>();
+                bool hasChanged = false;
+
                 foreach (var g in originalGenres)
                 {
-                    var mapping = config.Mappings.FirstOrDefault(m => m.OldGenre.Equals(g, StringComparison.OrdinalIgnoreCase));
-                    newGenresList.Add(mapping != null ? mapping.NewGenre : g);
+                    // Correction Erreur ligne 63 : On cherche dans notre dictionnaire
+                    if (mappingRules.TryGetValue(g, out var newGenre))
+                    {
+                        newGenresList.Add(newGenre);
+                        hasChanged = true;
+                    }
+                    else
+                    {
+                        newGenresList.Add(g);
+                    }
                 }
                 
-                var finalGenres = newGenresList.Distinct().ToArray();
-
-                if (!originalGenres.SequenceEqual(finalGenres))
+                if (hasChanged)
                 {
+                    var finalGenres = newGenresList.Distinct().ToArray();
                     _logger.LogInformation("GenreCleaner: Mise à jour de '{0}'", movie.Name);
 
                     movie.Genres = finalGenres;
@@ -92,8 +115,7 @@ namespace Jellyfin.Plugin.GenreCleaner
         {
             return new[] { 
                 new TaskTriggerInfo { 
-                    // On utilise le transtypage pour contourner les changements de noms
-                    Type = (TaskTriggerInfoType)0, // 0 correspond à 'Daily' dans Jellyfin
+                    Type = TaskTriggerInfoType.Daily, 
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
             };
