@@ -58,19 +58,19 @@
             document.querySelector('#genreCleanerForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 Dashboard.showLoadingMsg();
-                var page = document.querySelector('#GenreCleanerConfigPage');
 
                 var config = {
-                    Mappings: page.querySelector('#Mappings').value,
-                    EnableAutoClean: page.querySelector('#EnableAutoClean').checked
+                // Ces noms DOIVENT correspondre au C# (Mappings et EnableAutoClean)
+                    Mappings: document.querySelector('#Mappings').value,
+                    EnableAutoClean: document.querySelector('#EnableAutoClean').checked
                 };
 
-                ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(function (result) {
-                    Dashboard.processPluginConfigurationUpdateResult(result);
-                });
-
-                return false;
+            ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(function (result) {
+                Dashboard.processPluginConfigurationUpdateResult(result);
             });
+
+    return false;
+});
         </script>
     </div>
 </body>
