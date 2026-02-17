@@ -18,6 +18,15 @@ namespace Jellyfin.Plugin.GenreCleaner
         public override string Name => "Genre Cleaner";
         public override Guid Id => Guid.Parse("7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1");
 
+        public Stream GetImageResource()
+        {
+            var type = GetType();
+            var resourceName = type.Namespace + ".GenreCleaner.png";
+            return type.Assembly.GetManifestResourceStream(resourceName) 
+                   ?? throw new FileNotFoundException($"Resource not found: {resourceName}");
+        }
+
+        public ImageFormat ImageFormat => ImageFormat.Png;
         private readonly ILibraryManager _libraryManager;
 
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILibraryManager libraryManager)
