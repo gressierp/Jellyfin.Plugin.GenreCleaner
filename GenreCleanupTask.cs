@@ -19,13 +19,15 @@ namespace Jellyfin.Plugin.GenreCleaner
             _libraryManager = libraryManager;
         }
 
-        public string Name => "Nettoyer les genres (Manuel)";
+        // UI Strings translated to English
+        public string Name => "Clean Library Genres";
         public string Key => "GenreCleanupTask";
-        public string Description => "Applique les règles de remplacement à toute la bibliothèque.";
+        public string Description => "Applies genre mapping rules to all movies and series in the library.";
         public string Category => "Library";
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
+            // Query for Movies and Series - Compatible with 10.11.5 strict typing
             var query = new InternalItemsQuery 
             { 
                 IncludeItemTypes = new[] { BaseItemKind.Movie, BaseItemKind.Series }, 
@@ -37,6 +39,7 @@ namespace Jellyfin.Plugin.GenreCleaner
 
             for (int i = 0; i < items.Count; i++)
             {
+                // Check if user cancelled the task
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (Plugin.Instance != null && Plugin.Instance.CleanGenres(items[i]))
@@ -57,7 +60,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             { 
                 new TaskTriggerInfo 
                 { 
-                    // Utilisation directe de l'énumération TaskTriggerInfoType pour Jellyfin 10.11.5
+                    // Correct Enum for 10.11.5
                     Type = TaskTriggerInfoType.DailyTrigger, 
                     TimeOfDayTicks = TimeSpan.FromHours(3).Ticks 
                 } 
