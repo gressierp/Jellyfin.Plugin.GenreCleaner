@@ -26,7 +26,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             Instance = this;
             _libraryManager = libraryManager;
 
-            // Abonnement aux nouveaux médias
+            // Subscribe to item added event for auto-cleaning
             _libraryManager.ItemAdded += OnItemAdded;
         }
 
@@ -46,10 +46,12 @@ namespace Jellyfin.Plugin.GenreCleaner
 
         private void OnItemAdded(object? sender, ItemChangeEventArgs e)
         {
+            // Check if auto-clean is enabled and item is Movie or Series
             if (Configuration.EnableAutoClean && (e.Item is MediaBrowser.Controller.Entities.Movies.Movie || e.Item is MediaBrowser.Controller.Entities.TV.Series))
             {
                 if (CleanGenres(e.Item))
                 {
+                    // Update metadata in database
                     _libraryManager.UpdateItemAsync(e.Item, e.Item, ItemUpdateType.MetadataEdit, default);
                 }
             }
@@ -60,6 +62,7 @@ namespace Jellyfin.Plugin.GenreCleaner
             if (item?.Genres == null || item.Genres.Length == 0) return false;
             if (string.IsNullOrWhiteSpace(Configuration.Mappings)) return false;
 
+            // Parse mapping rules (SourceGenre=TargetGenre)
             var mappingRules = Configuration.Mappings.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(l => l.Split('='))
                 .Where(p => p.Length == 2)
@@ -67,24 +70,40 @@ namespace Jellyfin.Plugin.GenreCleaner
 
             if (mappingRules.Count == 0) return false;
 
-            var newGenres = item.Genres.Select(g => mappingRules.TryGetValue(g, out var n) ? n : g).Distinct().ToArray();
+            var currentGenres = item.Genres;
+            var newGenresList = new List<string>();
+            bool hasChanged = false;
 
-            if (!item.Genres.SequenceEqual(newGenres))
+            foreach (var g in currentGenres)
             {
-                item.Genres = newGenres;
+                if (mappingRules.TryGetValue(g, out var target))
+                {
+                    newGenresList.Add(target);
+                    hasChanged = true;
+                }
+                else
+                {
+                    newGenresList.Add(g);
+                }
+            }
+
+            if (hasChanged)
+            {
+                item.Genres = newGenresList.Distinct().ToArray();
+                
+                // Lock the Genres field to prevent provider overwrite
                 var locked = item.LockedFields.ToList();
                 if (!locked.Contains(MetadataField.Genres)) 
                 { 
                     locked.Add(MetadataField.Genres); 
                     item.LockedFields = locked.ToArray(); 
                 }
-                return true;
             }
-            return false;
+
+            return hasChanged;
         }
 
-        // Correction de l'erreur CS0115 : On utilise la méthode de l'interface IDisposable
-        // sans le mot-clé override si la classe de base ne le définit pas.
+        // Standard IDisposable for 10.11.5 compatibility
         public void Dispose()
         {
             if (_libraryManager != null)
