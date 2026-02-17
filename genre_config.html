@@ -1,111 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Genre Cleaner</title>
-</head>
-<body>
-    <div id="GenreCleanerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
-        
-        <style>
-            /* Élargit le conteneur principal pour plus de confort */
-            .content-primary {
-                max-width: 1000px !important;
-                margin: 0 auto;
-            }
-
-            /* Style pour la zone de texte (textarea) */
-            .genreCleaner-textarea {
-                width: 100% !important;
-                font-family: 'Courier New', Courier, monospace !important; /* Police alignée */
-                min-height: 400px;
-                font-size: 0.95em !important;
-                line-height: 1.4 !important;
-                background-color: rgba(0,0,0,0.2) !important;
-                border-radius: 5px;
-                padding: 10px !important;
-            }
-
-            /* Aide visuelle pour la zone de texte */
-            .genreCleaner-textarea:focus {
-                border-color: #00a4dc !important;
-            }
-        </style>
-
-        <div data-role="content">
-            <div class="content-primary">
-                <form id="genreCleanerForm">
-                    <div class="sectionTitleContainer flex align-items-center">
-                        <h2 class="sectionTitle">Configuration de Genre Cleaner</h2>
+<div id="GenreCleanerConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="ApiClient, loading, emby-input, emby-checkbox, emby-button">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="GenreCleanerConfigForm">
+                <div class="config-wide-Section">
+                    <h2 class="sectionTitle">Genre Cleaner Settings</h2>
+                    
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="chkEnableAutoClean" name="EnableAutoClean" />
+                            <span>Enable Automatic Cleaning</span>
+                        </label>
+                        <div class="fieldDescription">Automatically cleans genres when a new movie or series is added to the library.</div>
                     </div>
 
-                    <div class="verticalSection">
-                        <p>Configurez la manière dont les genres de votre bibliothèque doivent être renommés ou fusionnés.</p>
-                        
-                        <div class="inputContainer">
-                            <label class="inputLabel" for="Mappings">Règles de remplacement</label>
-                            <textarea is="emby-textarea" id="Mappings" name="Mappings" class="emby-textarea genreCleaner-textarea" rows="20" placeholder="Ancien Genre=Nouveau Genre"></textarea>
-                            <div class="fieldDescription">
-                                Entrez une règle par ligne sous la forme <b>Ancien=Nouveau</b>.<br/>
-                                <i>Exemple : Science-Fiction=SF</i><br/>
-                                <i>Exemple : Action/Aventure=Action</i>
-                            </div>
-                        </div>
-
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label>
-                                <input type="checkbox" is="emby-checkbox" id="EnableAutoClean" />
-                                <span>Activer le nettoyage automatique</span>
-                            </label>
-                            <div class="fieldDescription">Si activé, le nettoyage sera déclenché lors de l'ajout de nouveaux médias.</div>
+                    <div class="inputContainer">
+                        <label class="inputLabel" for="txtMappings">Genre Mappings</label>
+                        <textarea is="emby-input" id="txtMappings" name="Mappings" rows="10" style="height: 300px; font-family: monospace;"></textarea>
+                        <div class="fieldDescription">
+                            Enter one mapping per line in the format: <strong>SourceGenre=TargetGenre</strong><br/>
+                            Example: <em>Science-Fiction=Sci-Fi</em> or <em>Action & Adventure=Action</em>
                         </div>
                     </div>
 
-                    <div class="footer">
-                        <button is="emby-button" type="submit" class="raised button-accent block">
-                            <span>Sauvegarder les paramètres</span>
+                    <div class="infoBanner" style="margin: 2em 0; padding: 1em; background: #333; border-radius: 5px;">
+                        <strong>Note:</strong> Changes will lock the Genres field for the item to prevent them from being overwritten during the next metadata provider scan.
+                    </div>
+
+                    <div style="display: flex; gap: 1em; align-items: center;">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save Settings</span>
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <script type="text/javascript">
-            // Remplace bien par ton GUID si celui-ci est différent
-            var GenreCleanerConfig = {
-                pluginId: "7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"
-            };
+    <script type="text/javascript">
+        var GenreCleanerConfig = {
+            pluginId: "7a4b2c1d-8e9f-4a3b-b2c1-d8e9f4a3b2c1"
+        };
 
-            document.querySelector('#GenreCleanerConfigPage').addEventListener('pageshow', function () {
-                Dashboard.showLoadingMsg();
-                var page = this;
-
-                // Chargement de la configuration
-                ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
-                    page.querySelector('#Mappings').value = config.Mappings || '';
-                    page.querySelector('#EnableAutoClean').checked = config.EnableAutoClean;
-                    Dashboard.hideLoadingMsg();
-                });
+        $('#GenreCleanerConfigPage').on('pageshow', function () {
+            loading.show();
+            var page = this;
+            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
+                $('#chkEnableAutoClean', page).checked(config.EnableAutoClean || false).checkboxradio('refresh');
+                $('#txtMappings', page).val(config.Mappings || '');
+                loading.hide();
             });
+        });
 
-            document.querySelector('#genreCleanerForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-                var page = document.querySelector('#GenreCleanerConfigPage');
-
-                // Création de l'objet de config pour le C#
-                var config = {
-                    Mappings: page.querySelector('#Mappings').value,
-                    EnableAutoClean: page.querySelector('#EnableAutoClean').checked
-                };
-
-                // Envoi au serveur
+        $('#GenreCleanerConfigForm').on('submit', function () {
+            loading.show();
+            var page = $(this).parents('#GenreCleanerConfigPage')[0];
+            ApiClient.getPluginConfiguration(GenreCleanerConfig.pluginId).then(function (config) {
+                config.EnableAutoClean = $('#chkEnableAutoClean', page).checked();
+                config.Mappings = $('#txtMappings', page).val();
                 ApiClient.updatePluginConfiguration(GenreCleanerConfig.pluginId, config).then(function (result) {
                     Dashboard.processPluginConfigurationUpdateResult(result);
                 });
-
-                return false;
             });
-        </script>
-    </div>
-</body>
-</html>
+            return false;
+        });
+    </script>
+</div>
