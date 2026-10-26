@@ -12,7 +12,7 @@
         "version": "1.1.0.0",
         "changelog": "Migration vers Jellyfin 12.1",
         "targetAbi": "12.1.0.0",
-        "sourceUrl": "https://github.com/gressierp/Jellyfin.Plugin.GenreCleaner/releases/download/v1.1.0.0/Plugin.GenreCleaner.zip",
+        "sourceUrl": "https://github.com/gressierp/Jellyfin.Plugin.GenreCleaner/releases/download/v1.1.0.0/GenreCleaner-Plugin.zip",
         "checksum": "09C4467EFF145D7C22A1A8C3FAFB37AA"
       }
     ]
