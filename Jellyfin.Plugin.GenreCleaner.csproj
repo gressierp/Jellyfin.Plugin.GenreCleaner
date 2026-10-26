@@ -1,28 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework> <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Jellyfin.Plugin.GenreCleaner</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.GenreCleaner</RootNamespace>
     <Authors>PGressier</Authors>
     <PackageId>Jellyfin.Plugin.GenreCleaner</PackageId>
-    <Version>1.0.5.0</Version>
+    <Version>1.1.0.0</Version>
     <RepositoryUrl>https://github.com/gressierp/Jellyfin.Plugin.GenreCleaner</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.10" />
-    <PackageReference Include="Jellyfin.Model" Version="10.11.10" />
-    <PackageReference Include="Jellyfin.Common" Version="10.11.10" />
-    <PackageReference Include="Jellyfin.Extensions" Version="10.11.10" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.1.0" />
+    <PackageReference Include="Jellyfin.Model" Version="12.1.0" />
+    <PackageReference Include="Jellyfin.Common" Version="12.1.0" />
+    <PackageReference Include="Jellyfin.Extensions" Version="12.1.0" />
 </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="GenreCleaner.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="genre_config.html" />
   </ItemGroup>
 </Project>
